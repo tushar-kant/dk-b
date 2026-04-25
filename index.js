@@ -613,8 +613,8 @@ app.post('/api/user/checkin', async (req, res) => {
       user.checkInStreak = 1;
     }
 
-    const rewards = [0.05, 0.05, 0.07, 0.10, 0.10, 0.15, 0.20];
-    const reward = rewards[user.checkInStreak - 1];
+    const rewards = [5, 5, 10, 15, 15, 20, 50];
+    const reward = rewards[(user.checkInStreak - 1) % 7];
 
     user.balance += reward;
     user.lastCheckIn = today;
