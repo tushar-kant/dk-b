@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
   picture: {
     type: String
   },
+  phone: {
+    type: String,
+    unique: true,
+    sparse: true // This allows multiple users to have 'null' phone numbers
+  },
   balance: {
     type: Number,
     default: 0
