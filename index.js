@@ -486,17 +486,32 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     // OTP is valid, delete it
     await Otp.deleteOne({ _id: otpRecord._id });
 
+    console.log('OTP verified for:', email);
+
     let user = await User.findOne({ email });
     if (!user) {
-      user = new User({
-        email,
-        name: email.split('@')[0], // Default name from email
-        isVerified: true,
-      });
-      await user.save();
-    } else if (!user.isVerified) {
+      console.log('Creating new user for:', email);
+      try {
+        user = new User({
+          email,
+          name: email.split('@')[0],
+          isVerified: true,
+        });
+        await user.save();
+        console.log('New user created successfully');
+      } catch (saveErr) {
+        console.error('Error saving new user:', saveErr);
+        return res.status(500).json({ message: 'Failed to create user account' });
+      }
+    } else {
+      console.log('Existing user found, updating verification status');
       user.isVerified = true;
       await user.save();
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('CRITICAL: JWT_SECRET is missing in .env file!');
+      return res.status(500).json({ message: 'Server configuration error' });
     }
 
     const authToken = jwt.sign(
@@ -517,8 +532,8 @@ app.post('/api/auth/verify-otp', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Verify OTP Error:', error);
-    res.status(500).json({ message: 'Verification failed' });
+    console.error('CRITICAL Verify OTP Error:', error);
+    res.status(500).json({ message: 'Verification failed: ' + error.message });
   }
 });
 
